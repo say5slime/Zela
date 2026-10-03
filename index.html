@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zela – buy and sell</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#eef0f7;--card:#fff;--ink:#14172b;--mute:#5d627c;--line:#d9dcec;--brand:#2b3fd6;--onbrand:#fff;--pop:#f5e663;--onpop:#14172b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1226;--card:#1a1e3a;--ink:#eef0ff;--mute:#9aa0c4;--line:#2c3157;--brand:#7d8cff;--onbrand:#0f1226}}
+:root[data-theme="dark"]{--bg:#0f1226;--card:#1a1e3a;--ink:#eef0ff;--mute:#9aa0c4;--line:#2c3157;--brand:#7d8cff;--onbrand:#0f1226}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "DM Sans",system-ui,sans-serif}
+h1,h2,h3,.logo{font-family:"Bricolage Grotesque","DM Sans",system-ui,sans-serif;margin:0}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 16px}
+.bar{max-width:1040px;margin:auto;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.logo{font-size:30px;font-weight:800;color:var(--brand);letter-spacing:-1px;background:linear-gradient(transparent 62%,var(--pop) 62%);padding:0 4px}
+.search{flex:1;min-width:180px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{resize:vertical;min-height:80px}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:10px 16px;font-weight:700}
+.primary{background:var(--brand);color:var(--onbrand)}
+.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+main{max-width:1040px;margin:auto;padding:16px}
+.hero{padding:20px 0 8px}
+.hero h1{font-size:clamp(28px,6vw,46px);line-height:1.05;letter-spacing:-1px;max-width:14em}
+.hero p{color:var(--mute);margin:8px 0 0}
+.tools{display:flex;gap:8px;align-items:center;margin:16px 0;flex-wrap:wrap}
+.chips{display:flex;gap:8px;overflow-x:auto;flex:1;padding-bottom:4px}
+.chip{white-space:nowrap;background:var(--card);color:var(--ink);border:1.5px solid var(--line);padding:7px 14px;border-radius:99px;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--brand);color:var(--onbrand);border-color:var(--brand)}
+.tools select{width:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;text-align:left;padding:0;color:var(--ink);font-weight:400;display:block;width:100%}
+.item:hover{border-color:var(--brand)}
+.tile{height:130px;display:grid;place-items:center;font-size:56px}
+.info{padding:12px 14px 14px}
+.info h3{font-size:17px}
+.price{font-weight:700;font-size:18px;margin-top:2px}
+.meta{color:var(--mute);font-size:14px}
+.empty{grid-column:1/-1;text-align:center;color:var(--mute);padding:48px 0}
+dialog{border:0;border-radius:18px;padding:0;width:min(460px,calc(100% - 24px));background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(10,12,30,.6)}
+.dlg{padding:20px;display:grid;gap:12px}
+.dlg .tile{border-radius:12px;height:150px}
+label{display:grid;gap:4px;font-weight:500;font-size:14px}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.save{background:none;color:var(--ink);padding:4px 8px;font-size:20px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+#toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<header><div class="bar">
+<span class="logo">zela</span>
+<input class="search" id="q" type="search" placeholder="Search items" aria-label="Search items">
+<button class="ghost" id="myBtn">My store</button><button class="primary" id="sellBtn">Sell an item</button>
+</div></header>
+<main>
+<section class="hero"><h1>Buy it. Sell it. Done.</h1><p>Local-style deals on things people actually want.</p></section>
+<div class="tools">
+<div class="chips" id="chips" role="group" aria-label="Categories"></div>
+<select id="sort" aria-label="Sort"><option value="new">Newest</option><option value="lo">Price: low to high</option><option value="hi">Price: high to low</option><option value="saved">Saved only</option></select>
+</div>
+<div class="grid" id="grid"></div>
+</main>
+
+<dialog id="view"><div class="dlg" id="viewBody"></div></dialog>
+<dialog id="sell"><div class="dlg">
+<h2>Sell an item</h2>
+<label>Title<input id="fT" maxlength="60" placeholder="e.g. Road bike, 54cm"></label>
+<div class="row"><label>Price (D)<input id="fP" type="number" min="0" step="1" inputmode="numeric"></label>
+<label>Category<select id="fC"></select></label></div>
+<label>Condition<select id="fK"><option>New</option><option selected>Like new</option><option>Good</option><option>Fair</option></select></label>
+<label>Photo (optional)<input id="fF" type="file" accept="image/*"></label>
+<label>Description<textarea id="fD" maxlength="400" placeholder="What should buyers know?"></textarea></label>
+<div class="row"><button class="ghost" id="fX">Cancel</button><button class="primary" id="fS">Post listing</button></div>
+</div></dialog>
+<dialog id="prof"><div class="dlg"><h2>Your store</h2>
+<label>Shop name<input id="pN" maxlength="40" placeholder="e.g. Fatou's Finds"></label>
+<label>About your shop<textarea id="pB" maxlength="200" placeholder="What do you sell?"></textarea></label>
+<label>Wave number<input id="pW" type="tel" placeholder="+220 ..."></label>
+<label>WhatsApp number<input id="pA" type="tel" placeholder="+220 ..."></label>
+<div class="row"><button class="ghost" id="pX">Cancel</button><button class="primary" id="pS">Save store</button></div></div></dialog>
+<dialog id="shop"><div class="dlg" id="shopBody"></div></dialog>
+<dialog id="auth"><div class="dlg"><h2>Sign in to Zela</h2><label>Email<input id="aE" type="email" autocomplete="email"></label><label>Password (6+ characters)<input id="aP" type="password" autocomplete="current-password"></label><div class="row"><button class="ghost" id="aUp">Create account</button><button class="primary" id="aIn">Sign in</button></div></div></dialog>
+<div id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+var SUPABASE_URL="https://qcdolxyapnfqzqvfrezh.supabase.co",SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjZG9seHlhcG5mcXpxdmZyZXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMzY5NDAsImV4cCI6MjEwNjYxMjk0MH0.wvRYmspfdzpD7t4AJvsSN29u7Bi22BHjwwreDobZQbs";
+var sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+var CATS={Electronics:["📱","#cfd6ff"],Home:["🛋️","#ffe9b8"],Fashion:["👟","#ffd0dc"],Sports:["🚲","#c8f0d6"],Books:["📚","#e3d4ff"],Other:["🎁","#d6e9f5"]};
+var items=[],shops={},user=null,me=null,saved=[],cat="All";
+function ld(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
+function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+saved=ld("zela.saved",[]);
+var $=function(i){return document.getElementById(i)};
+function toast(m){var t=$("toast");t.textContent=m;t.className="on";setTimeout(function(){t.className=""},2500)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function shopOf(n){return shops[n]||{n:n,b:"",w:""}}
+async function loadMe(){var s=await sb.auth.getSession();user=s.data.session?s.data.session.user:null;me=null;
+if(user){var r=await sb.from("profiles").select("*").eq("id",user.id).maybeSingle();if(r.data)me={n:r.data.shop,b:r.data.bio,w:r.data.wave,a:r.data.whatsapp}}}
+async function load(){var r=await sb.from("listings").select("*,profiles(shop,bio,wave,whatsapp)").eq("sold",false).order("created",{ascending:false});
+if(r.error){toast("Could not load listings");return}
+shops={};if(me)shops[me.n]=me;
+items=r.data.map(function(x){var p=x.profiles||{};shops[p.shop]={n:p.shop,b:p.bio,w:p.wave,a:p.whatsapp};return{id:x.id,t:x.title,p:x.price,c:x.cat,k:x.cond,d:x.descr,photo:x.photo,s:p.shop,sid:x.seller}});render()}
+function tile(x,h,rad){return x.photo?'<img src="'+esc(x.photo)+'" alt="" loading="lazy" style="width:100%;height:'+h+'px;object-fit:cover;display:block;border-radius:'+rad+'px">':'<div class="tile" style="height:'+h+'px;background:'+CATS[x.c][1]+'">'+CATS[x.c][0]+'</div>'}
+function shrink(f){return new Promise(function(ok,no){var im=new Image(),u=URL.createObjectURL(f);im.onload=function(){var k=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(function(b){b?ok(b):no()},"image/jpeg",0.8)};im.onerror=no;im.src=u})}
+function chips(){var h="";["All"].concat(Object.keys(CATS)).forEach(function(c){h+='<button class="chip" aria-pressed="'+(c==cat)+'" data-c="'+c+'">'+c+'</button>'});$("chips").innerHTML=h}
+function render(){var q=$("q").value.toLowerCase(),so=$("sort").value;
+var l=items.filter(function(x){return(cat=="All"||x.c==cat)&&((x.t||"")+" "+(x.d||"")).toLowerCase().indexOf(q)>-1&&(so!="saved"||saved.indexOf(x.id)>-1)});
+if(so=="lo")l.sort(function(a,b){return a.p-b.p});if(so=="hi")l.sort(function(a,b){return b.p-a.p});
+$("grid").innerHTML=l.length?l.map(function(x){return'<button class="item" data-id="'+x.id+'">'+tile(x,130,0)+'<div class="info"><h3>'+esc(x.t)+'</h3><div class="price">D '+x.p+'</div><div class="meta">'+esc(x.k)+' · '+esc(x.s)+(saved.indexOf(x.id)>-1?' · ♥':'')+'</div></div></button>'}).join(""):'<div class="empty">No listings yet. Be the first to sell something.</div>'}
+function open(id){var x=items.filter(function(i){return i.id==id})[0];if(!x)return;var on=saved.indexOf(id)>-1,own=user&&x.sid==user.id;
+$("viewBody").innerHTML=tile(x,150,12)+'<div class="row" style="align-items:center"><h2>'+esc(x.t)+'</h2><button class="save" id="hs" aria-label="'+(on?"Unsave":"Save")+'">'+(on?"♥":"♡")+'</button></div><div class="price">D '+x.p+'</div><div class="meta">'+esc(x.c)+' · '+esc(x.k)+' · sold by '+esc(x.s)+'</div><p>'+esc(x.d||"No description.")+'</p>'+(own?'<button class="primary" id="hd">Mark as sold</button>':'<button class="primary" id="hm">Message on WhatsApp</button><button class="primary" id="hw">Pay with Wave</button>')+'<div class="row"><button class="ghost" id="hh">View store</button><button class="ghost" id="hc">Close</button></div>';
+$("view").showModal();
+$("hc").onclick=function(){$("view").close()};
+$("hh").onclick=function(){$("view").close();showShop(x.s)};
+if($("hw"))$("hw").onclick=function(){pay(x)};
+if($("hm"))$("hm").onclick=function(){var sh=shopOf(x.s),d=(sh.a||"").replace(/\D/g,"");if(!d){toast("This seller has not added WhatsApp yet");return}if(d.length==7)d="220"+d;window.open("https://wa.me/"+d+"?text="+encodeURIComponent("Hi, I'm interested in your "+x.t+" on Zela"),"_blank","noopener")};
+if($("hd"))$("hd").onclick=async function(){var r=await sb.from("listings").update({sold:true}).eq("id",x.id);$("view").close();if(r.error){toast(r.error.message);return}await load();toast("Marked as sold")};
+$("hs").onclick=function(){var i=saved.indexOf(id);if(i>-1)saved.splice(i,1);else saved.push(id);sv("zela.saved",saved);$("view").close();render();toast(i>-1?"Removed from saved":"Saved")}}
+function pay(x){var sh=shopOf(x.s);if(!sh.w){toast("This seller has not added a Wave number yet");return}
+$("viewBody").innerHTML='<h2>Pay with Wave</h2><p>Send <b>D '+x.p+'</b> to <b>'+esc(sh.n)+'</b> on Wave:</p><div class="price">'+esc(sh.w)+'</div><p class="meta">Only pay once you have agreed on pickup or delivery.</p><div class="row"><button class="ghost" id="pc">Cancel</button><button class="primary" id="pd">I have paid</button></div>';
+$("pc").onclick=function(){$("view").close()};$("pd").onclick=function(){$("view").close();toast("Thanks! "+sh.n+" will confirm your payment")}}
+function showShop(n){var sh=shopOf(n),l=items.filter(function(i){return i.s==n}),own=me&&me.n==n;
+$("shopBody").innerHTML='<h2>'+esc(sh.n)+'</h2><p class="meta">'+esc(sh.b||"No bio yet.")+'</p>'+(sh.w?'<div class="meta">Accepts Wave payments</div>':'')+'<div class="grid" style="grid-template-columns:1fr 1fr">'+l.map(function(x){return'<button class="item" data-id="'+x.id+'">'+tile(x,80,0)+'<div class="info"><h3>'+esc(x.t)+'</h3><div class="price">D '+x.p+'</div></div></button>'}).join("")+'</div><div class="row">'+(own?'<button class="ghost" id="se">Edit store</button><button class="ghost" id="so">Sign out</button>':'')+'<button class="primary" id="sc">Close</button></div>';
+$("shop").showModal();$("sc").onclick=function(){$("shop").close()};
+if(own){$("se").onclick=function(){$("shop").close();openProf()};$("so").onclick=async function(){await sb.auth.signOut();user=null;me=null;$("shop").close();await load();toast("Signed out")}}}
+function openProf(){$("pN").value=me?me.n:"";$("pB").value=me&&me.b?me.b:"";$("pW").value=me&&me.w?me.w:"";$("pA").value=me&&me.a?me.a:"";$("prof").showModal()}
+function gate(then){if(!user){$("auth").showModal();return}if(!me){toast("Set up your store first");openProf();return}then()}
+async function auth(up){var e=$("aE").value.trim(),p=$("aP").value;if(!e||p.length<6){toast("Enter your email and a password of 6+ characters");return}
+var r=up?await sb.auth.signUp({email:e,password:p}):await sb.auth.signInWithPassword({email:e,password:p});
+if(r.error){toast(r.error.message);return}
+await loadMe();if(!user){$("auth").close();toast("Check your email to confirm, then sign in");return}
+$("auth").close();await load();if(!me){toast("Account ready. Now set up your store");openProf()}else toast("Welcome back, "+me.n)}
+$("aIn").onclick=function(){auth(false)};$("aUp").onclick=function(){auth(true)};
+$("chips").onclick=function(e){var c=e.target.getAttribute("data-c");if(c){cat=c;chips();render()}};
+$("grid").onclick=function(e){var b=e.target.closest(".item");if(b)open(+b.getAttribute("data-id"))};
+$("shopBody").onclick=function(e){var b=e.target.closest(".item");if(b){$("shop").close();open(+b.getAttribute("data-id"))}};
+$("q").oninput=render;$("sort").onchange=render;
+$("fC").innerHTML=Object.keys(CATS).map(function(c){return"<option>"+c+"</option>"}).join("");
+$("sellBtn").onclick=function(){gate(function(){$("sell").showModal()})};
+$("myBtn").onclick=function(){if(!user)$("auth").showModal();else if(!me)openProf();else showShop(me.n)};
+$("fX").onclick=function(){$("sell").close()};
+$("pX").onclick=function(){$("prof").close()};
+$("pS").onclick=async function(){var n=$("pN").value.trim();if(!n){toast("Add a shop name");return}
+var r=await sb.from("profiles").upsert({id:user.id,shop:n,bio:$("pB").value.trim(),wave:$("pW").value.trim(),whatsapp:$("pA").value.trim()});
+if(r.error){toast(r.error.code=="23505"?"That shop name is taken":r.error.message);return}
+me={n:n,b:$("pB").value.trim(),w:$("pW").value.trim(),a:$("pA").value.trim()};$("prof").close();await load();toast("Store saved")};
+$("fS").onclick=async function(){var t=$("fT").value.trim(),p=parseFloat($("fP").value);
+if(!t){toast("Add a title");return}if(isNaN(p)||p<0){toast("Enter a price");return}
+var b=$("fS");b.disabled=true;
+try{var url=null,f=$("fF").files[0];
+if(f){var blob=await shrink(f),path=user.id+"/"+Date.now()+".jpg",u=await sb.storage.from("photos").upload(path,blob,{contentType:"image/jpeg"});
+if(u.error){toast("Photo upload failed: "+u.error.message);return}url=sb.storage.from("photos").getPublicUrl(path).data.publicUrl}
+var r=await sb.from("listings").insert({title:t,price:Math.round(p),cat:$("fC").value,cond:$("fK").value,descr:$("fD").value.trim(),photo:url});
+if(r.error){toast(r.error.message);return}
+$("fT").value="";$("fP").value="";$("fD").value="";$("fF").value="";$("sell").close();cat="All";chips();await load();toast("Listing posted")}
+catch(err){toast("Could not post. Try a different photo.")}finally{b.disabled=false}};
+chips();(async function(){await loadMe();await load()})();
+</script>
+</body>
+  </html>
